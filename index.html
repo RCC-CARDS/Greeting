@@ -3,30 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Greeting Card Studio | المينيمال</title>
+    
+    <title>انشاء بطاقة تهنئة RCC</title>
+    
+    <meta property="og:title" content="انشاء بطاقة تهنئة RCC">
+    <meta property="og:description" content="أداة مخصصة لإنشاء بطاقات تهنئة رسمية بخطوات بسيطة">
+    <meta property="og:image" content="logo.jpg">
+
     <style>
         @font-face { font-family: 'MyCustomFont'; src: url('font.otf') format('opentype'); }
         body { font-family: 'MyCustomFont', sans-serif; background: #f4f7f9; padding: 10px; text-align: center; margin: 0; color: #2c3e50; }
         .container { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); display: inline-block; width: 100%; max-width: 480px; box-sizing: border-box; }
         .logo-img { max-width: 90px; margin-bottom: 20px; opacity: 0.9; }
         
-        /* شريط الإعدادات السريع */
         .setup-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .option-box { background: #f8fafd; padding: 8px; border-radius: 12px; border: 1px solid #edf2f7; }
         label { display: block; font-size: 11px; font-weight: bold; color: #a0aec0; margin-bottom: 4px; text-transform: uppercase; }
         select { width: 100%; border: none; background: transparent; font-family: inherit; font-size: 14px; color: #2d3748; outline: none; cursor: pointer; }
 
-        /* منطقة المعاينة */
+        .input-group { margin-bottom: 20px; }
+        input[type="text"] { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 17px; text-align: center; font-family: inherit; box-sizing: border-box; transition: 0.3s; outline: none; margin-bottom: 8px; }
+        input[type="text"]:focus { border-color: #3182ce; background: #fff; }
+        .job-title { font-size: 14px !important; border-width: 1px !important; }
+
         .preview-box { margin-bottom: 20px; border-radius: 16px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); background: #eee; line-height: 0; }
         canvas { max-width: 100%; height: auto; display: block; }
 
-        /* منطقة الإدخال */
-        .input-group { margin-bottom: 15px; }
-        input[type="text"] { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 17px; text-align: center; font-family: inherit; box-sizing: border-box; transition: 0.3s; outline: none; }
-        input[type="text"]:focus { border-color: #3182ce; background: #fff; }
-        .job-title { margin-top: 8px; font-size: 14px !important; border-width: 1px !important; }
-
-        /* أدوات التحكم */
         .sliders-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #fcfcfc; padding: 15px; border-radius: 16px; border: 1px solid #f1f5f9; }
         .slider-item { text-align: right; }
         .slider-item.en { text-align: left; }
@@ -35,16 +37,15 @@
         .color-circle { width: 100%; height: 35px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; padding: 0; background: none; -webkit-appearance: none; }
         .color-circle::-webkit-color-swatch { border-radius: 6px; border: none; }
 
-        .btn-main { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.3s; margin-top: 15px; }
+        .btn-main { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.3s; margin-top: 10px; }
         .btn-save { background: #2f855a; color: white; }
-        .btn-save:hover { background: #276749; }
-        .btn-share { background: #3182ce; color: white; margin-top: 8px; }
+        .btn-share { background: #3182ce; color: white; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <img src="logo.jpg" class="logo-img" alt="Logo">
+        <img src="logo.jpg" class="logo-img" alt="RCC Logo">
         
         <div class="setup-bar">
             <div class="option-box">
@@ -64,13 +65,13 @@
             </div>
         </div>
 
-        <div class="preview-box">
-            <canvas id="mainCanvas"></canvas>
-        </div>
-
         <div class="input-group">
             <input type="text" id="nameInp" placeholder="ادخل الاسم هنا..." oninput="draw()">
             <input type="text" id="jobInp" class="job-title" placeholder="المسمى الوظيفي (اختياري)..." oninput="draw()">
+        </div>
+
+        <div class="preview-box">
+            <canvas id="mainCanvas"></canvas>
         </div>
 
         <div class="sliders-grid" id="controlsGrid">
@@ -150,12 +151,8 @@
                 await document.fonts.load(`bold ${sz}px MyCustomFont`);
                 ctx.textAlign = "center";
                 ctx.fillStyle = clr;
-                
-                // الاسم
                 ctx.font = `bold ${sz}px 'MyCustomFont'`;
                 ctx.fillText(name, x, y);
-                
-                // الوصف
                 if(job) {
                     ctx.font = `${sz * 0.6}px 'MyCustomFont'`;
                     ctx.fillText(job, x, y + (sz * 0.85));
@@ -165,19 +162,19 @@
 
         function download() {
             const a = document.createElement('a');
-            a.download = 'card.png';
+            a.download = 'card-rcc.png';
             a.href = canvas.toDataURL('image/png');
             a.click();
         }
 
         async function share() {
             canvas.toBlob(async b => {
-                const f = new File([b], 'card.png', {type:'image/png'});
+                if(!b) return;
+                const f = new File([b], 'card-rcc.png', {type:'image/png'});
                 if(navigator.share) await navigator.share({files:[f]});
                 else alert("المشاركة غير مدعومة، استخدم التحميل");
             });
         }
-
         updateUI();
     </script>
 </body>
