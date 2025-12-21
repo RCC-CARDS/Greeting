@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" id="mainHtml">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Greeting Card Studio | المينيمال</title>
+    <style>
+        @font-face { font-family: 'MyCustomFont'; src: url('font.otf') format('opentype'); }
+        body { font-family: 'MyCustomFont', sans-serif; background: #f4f7f9; padding: 10px; text-align: center; margin: 0; color: #2c3e50; }
+        .container { background: white; padding: 25px; border-radius: 24px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); display: inline-block; width: 100%; max-width: 480px; box-sizing: border-box; }
+        .logo-img { max-width: 90px; margin-bottom: 20px; opacity: 0.9; }
+        
+        /* شريط الإعدادات السريع */
+        .setup-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .option-box { background: #f8fafd; padding: 8px; border-radius: 12px; border: 1px solid #edf2f7; }
+        label { display: block; font-size: 11px; font-weight: bold; color: #a0aec0; margin-bottom: 4px; text-transform: uppercase; }
+        select { width: 100%; border: none; background: transparent; font-family: inherit; font-size: 14px; color: #2d3748; outline: none; cursor: pointer; }
+
+        /* منطقة المعاينة */
+        .preview-box { margin-bottom: 20px; border-radius: 16px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); background: #eee; line-height: 0; }
+        canvas { max-width: 100%; height: auto; display: block; }
+
+        /* منطقة الإدخال */
+        .input-group { margin-bottom: 15px; }
+        input[type="text"] { width: 100%; padding: 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 17px; text-align: center; font-family: inherit; box-sizing: border-box; transition: 0.3s; outline: none; }
+        input[type="text"]:focus { border-color: #3182ce; background: #fff; }
+        .job-title { margin-top: 8px; font-size: 14px !important; border-width: 1px !important; }
+
+        /* أدوات التحكم */
+        .sliders-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #fcfcfc; padding: 15px; border-radius: 16px; border: 1px solid #f1f5f9; }
+        .slider-item { text-align: right; }
+        .slider-item.en { text-align: left; }
+        input[type="range"] { width: 100%; cursor: pointer; margin-top: 8px; }
+        
+        .color-circle { width: 100%; height: 35px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; padding: 0; background: none; -webkit-appearance: none; }
+        .color-circle::-webkit-color-swatch { border-radius: 6px; border: none; }
+
+        .btn-main { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-family: inherit; font-weight: bold; transition: 0.3s; margin-top: 15px; }
+        .btn-save { background: #2f855a; color: white; }
+        .btn-save:hover { background: #276749; }
+        .btn-share { background: #3182ce; color: white; margin-top: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <img src="logo.jpg" class="logo-img" alt="Logo">
+        
+        <div class="setup-bar">
+            <div class="option-box">
+                <label id="ui-lang-lbl">اللغة</label>
+                <select id="langSelect" onchange="updateUI()">
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+            <div class="option-box">
+                <label id="ui-format-lbl">المقاس</label>
+                <select id="formatSelect" onchange="refresh()">
+                    <option value="v">طولي (9:16)</option>
+                    <option value="h">عرضي (16:9)</option>
+                    <option value="s">مربع (1:1)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="preview-box">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="nameInp" placeholder="ادخل الاسم هنا..." oninput="draw()">
+            <input type="text" id="jobInp" class="job-title" placeholder="المسمى الوظيفي (اختياري)..." oninput="draw()">
+        </div>
+
+        <div class="sliders-grid" id="controlsGrid">
+            <div class="slider-item">
+                <label id="ui-x-lbl">المكان أفقي (X)</label>
+                <input type="range" id="posX" min="0" max="100" value="50" oninput="draw()">
+            </div>
+            <div class="slider-item">
+                <label id="ui-y-lbl">المكان عمودي (Y)</label>
+                <input type="range" id="posY" min="10" max="95" value="85" oninput="draw()">
+            </div>
+            <div class="slider-item">
+                <label id="ui-size-lbl">حجم الخط</label>
+                <input type="range" id="fontSz" min="30" max="160" value="75" oninput="draw()">
+            </div>
+            <div class="slider-item">
+                <label id="ui-color-lbl">اللون</label>
+                <input type="color" id="textClr" class="color-circle" value="#333333" oninput="draw()">
+            </div>
+        </div>
+
+        <button class="btn-main btn-save" id="ui-save-btn" onclick="download()">تحميل البطاقة</button>
+        <button class="btn-main btn-share" id="ui-share-btn" onclick="share()">مشاركة سريعة</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const bg = new Image();
+
+        const ui = {
+            ar: { lang:"اللغة", format:"المقاس", x:"المكان أفقي", y:"المكان عمودي", size:"حجم الخط", color:"اللون", name:"ادخل الاسم هنا...", job:"المسمى الوظيفي (اختياري)...", save:"تحميل البطاقة", share:"مشاركة سريعة", dir:"rtl" },
+            en: { lang:"Language", format:"Format", x:"Horizontal", y:"Vertical", size:"Font Size", color:"Color", name:"Enter Name...", job:"Job Title (Optional)...", save:"Download Card", share:"Quick Share", dir:"ltr" }
+        };
+
+        function updateUI() {
+            const l = document.getElementById('langSelect').value;
+            const d = ui[l];
+            document.getElementById('mainHtml').dir = d.dir;
+            document.getElementById('ui-lang-lbl').innerText = d.lang;
+            document.getElementById('ui-format-lbl').innerText = d.format;
+            document.getElementById('ui-x-lbl').innerText = d.x;
+            document.getElementById('ui-y-lbl').innerText = d.y;
+            document.getElementById('ui-size-lbl').innerText = d.size;
+            document.getElementById('ui-color-lbl').innerText = d.color;
+            document.getElementById('nameInp').placeholder = d.name;
+            document.getElementById('jobInp').placeholder = d.job;
+            document.getElementById('ui-save-btn').innerText = d.save;
+            document.getElementById('ui-share-btn').innerText = d.share;
+            
+            const grid = document.getElementById('controlsGrid');
+            l === 'en' ? grid.classList.add('en') : grid.classList.remove('en');
+            refresh();
+        }
+
+        function refresh() {
+            const f = document.getElementById('formatSelect').value;
+            const l = document.getElementById('langSelect').value;
+            bg.src = `bg_${f}_${l}.jpg`;
+            bg.onload = () => draw();
+        }
+
+        async function draw() {
+            if(!bg.complete) return;
+            canvas.width = bg.width;
+            canvas.height = bg.height;
+            ctx.drawImage(bg, 0, 0);
+
+            const name = document.getElementById('nameInp').value;
+            const job = document.getElementById('jobInp').value;
+            const x = canvas.width * (document.getElementById('posX').value / 100);
+            const y = canvas.height * (document.getElementById('posY').value / 100);
+            const sz = parseInt(document.getElementById('fontSz').value);
+            const clr = document.getElementById('textClr').value;
+
+            if(name || job) {
+                await document.fonts.load(`bold ${sz}px MyCustomFont`);
+                ctx.textAlign = "center";
+                ctx.fillStyle = clr;
+                
+                // الاسم
+                ctx.font = `bold ${sz}px 'MyCustomFont'`;
+                ctx.fillText(name, x, y);
+                
+                // الوصف
+                if(job) {
+                    ctx.font = `${sz * 0.6}px 'MyCustomFont'`;
+                    ctx.fillText(job, x, y + (sz * 0.85));
+                }
+            }
+        }
+
+        function download() {
+            const a = document.createElement('a');
+            a.download = 'card.png';
+            a.href = canvas.toDataURL('image/png');
+            a.click();
+        }
+
+        async function share() {
+            canvas.toBlob(async b => {
+                const f = new File([b], 'card.png', {type:'image/png'});
+                if(navigator.share) await navigator.share({files:[f]});
+                else alert("المشاركة غير مدعومة، استخدم التحميل");
+            });
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
